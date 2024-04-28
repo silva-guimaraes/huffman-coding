@@ -7,11 +7,11 @@
 #include <math.h>
 
 #define BUFFER_SIZE 2e9
-// #define TABLE_SIZE 256+1
-#define TABLE_SIZE 128
+#define TABLE_SIZE 256
+// #define TABLE_SIZE 128
 
 typedef struct node {
-    char c;
+    unsigned char c;
     int count;
     struct node *left, *right;
 
@@ -34,7 +34,7 @@ void insert_sort(node* list[TABLE_SIZE]) {
 
 void _create_lookup_table(char* table[], node* tree, char* bit_string, long int* bits_amount) {
 
-    if (tree->c > -1) {
+    if (tree->c > 0) {
         table[tree->c] = bit_string;
         *bits_amount += strlen(bit_string) * tree->count; 
     }
@@ -45,10 +45,11 @@ void _create_lookup_table(char* table[], node* tree, char* bit_string, long int*
         char* right = strdup(bit_string);
         right = strcat(right, "1");
 
-        free(bit_string);
-
         _create_lookup_table(table, tree->left, left, bits_amount);
         _create_lookup_table(table, tree->right, right, bits_amount);
+
+        free(bit_string);
+
     }
 
 }
@@ -64,10 +65,24 @@ void create_lookup_table(char* table[], node* tree, long int* bits_amount) {
 // debug
 void _graph(node* root) {
 
-    if (root->c == -1)
+    if (root->c == 0)
         printf("\"%p\" [label=\"%d\"];\n", root, root->count);
-    else
-        printf("\"%p\" [label=\"%c\"];\n", root, root->c);
+    else {
+        char c = root->c;
+
+        switch (c) {
+            case '\\':
+                printf("\"%p\" [label=\"\\\\\"];\n", root);
+                break;
+            case '"':
+                printf("\"%p\" [label=\"\\\"\"];\n", root);
+                break;
+            default:
+                printf("\"%p\" [label=\"%c\"];\n", root, c);
+                break;
+        }
+
+    }
 
     if (root->left) {
         printf("\"%p\" -> \"%p\";\n", root, root->left);
@@ -91,13 +106,14 @@ int main(int argc, char* argv[]) {
 
     const char* output_file_name = "output.huff";
 
-    // if (argc == 1) {
-    //     fprintf(stderr, "ERRO: Nome do arquivo de output é necessário como primeiro argumento.\n");
-    //     exit(1);
-    // }
+    FILE* output_file = fopen(output_file_name, "wb");
+    if (!output_file) {
+        fprintf(stderr, "ERRO: Erro ao abrir arquivo\n");
+        return 1;
+    }
 
-    char* input = malloc(BUFFER_SIZE);
-    unsigned long long size = 0;
+    unsigned char* input = malloc(BUFFER_SIZE);
+    unsigned long int size = 0;
 
     // le input do stdin
     int bytes_read = 0;
@@ -117,6 +133,7 @@ int main(int argc, char* argv[]) {
     node* count[TABLE_SIZE] = { 0 };
 
 
+
     for (int i = 0; i < TABLE_SIZE; i++) {
         count[i] = malloc(sizeof(node));
 
@@ -131,11 +148,9 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < size; i++)
         count[input[i]]->count++;
 
-    // int foo = 0;
-    // for (int i = 0; i < TABLE_SIZE; i++)
-    //     foo += count[i]->count;
 
     insert_sort(count);
+
 
 
     int first = -1;
@@ -149,7 +164,7 @@ int main(int argc, char* argv[]) {
 
         node* n = malloc(sizeof(node));
         *n = (node) {
-            .c = -1,
+            .c = 0,
             .count = left->count + right->count,
             .left = left,
             .right = right,
@@ -162,19 +177,26 @@ int main(int argc, char* argv[]) {
 
     node* root = count[TABLE_SIZE-1];
 
+    // debug
+    if (argc > 1 && strcmp(argv[1], "graph") == 0)
+        graph(root);
+
     char* lookup[TABLE_SIZE] = { 0 };
     long int bits_amount = 0;
 
+
     create_lookup_table(lookup, root, &bits_amount);
 
-    char* compressed_bits = malloc(ceil((float) bits_amount / 8));
+    unsigned char* compressed_bits = calloc(ceil((float) bits_amount / 8), sizeof(char));
 
-    long int current_byte = 0;
+    unsigned long int current_byte = 0;
     int bits_counter = 0;
 
     for (int i = 0; i < size; i++) {
 
+
         char* bit_string = lookup[input[i]];
+        // printf("foo %s %c\n", bit_string, input[i]);
         size_t len = strlen(bit_string);
 
         for (int j = 0; j < len; j++) {
@@ -192,10 +214,15 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    FILE* output_file = fopen(output_file_name, "w");
+
+
     fwrite(compressed_bits, sizeof(char), current_byte, output_file);
 
-    printf("%ld bytes salvos em %s\n", current_byte, output_file_name);
+    free(compressed_bits);
+    fclose(output_file);
+
+    // printf("%ld -> %ld bytes salvos em \"%s\". %.2f%% de diferença.\n", size, current_byte, output_file_name, (float) current_byte / size * 100);
+    // printf("%ld bytes salvos em %s\n", current_byte, output_file_name);
 
 
     return 0;
