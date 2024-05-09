@@ -220,15 +220,16 @@ int main(int argc, char* argv[]) {
 
     // tabela pra traduzir caracteres para a codificação que criamos com a árvore.
     char* lookup[TABLE_SIZE] = { 0 };
+    // quantos bits o documento comprimido tem no total.
     long int bits_amount = 0;
     create_lookup_table(lookup, root, &bits_amount);
 
-    // array de bytes para o output final comprimido. cada byte dessa array sera preenchida com os bits porem
-    // acontece que os bits da nossa codificação não todos se encaixam exatamente em um byte.
+    // array de bytes para o output final comprimido. cada byte dessa array será preenchido com os bits.
+    // o grande problema é que os bits da nossa codificação não todos se encaixam exatamente em um byte.
     // por causa disso iremos preencher cada byte até o seu maximo e passar para o proximo byte caso os bits
     // transbordem.
     unsigned char* compressed_bits = calloc(ceil((float) bits_amount / 8), sizeof(char));
-    // byte atual onde bytes estarão sendo inseridos.
+    // byte atual onde bits estarão sendo inseridos.
     unsigned long int current_byte = 0;
     // quantos bits do byte atual foram inseridos. 8 == hora de passar para o proximo byte
     int bits_counter = 0;
@@ -273,5 +274,4 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
-
 
