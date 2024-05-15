@@ -268,8 +268,8 @@ int main(int argc, char* argv[]) {
     free(compressed_bits);
     fclose(output_file);
 
-    // printf("%ld -> %ld bytes salvos em \"%s\". %.2f%% de diferença.\n", size, current_byte, output_file_name, (float) current_byte / size * 100);
-    // printf("%ld bytes salvos em %s\n", current_byte, output_file_name);
+    printf("%ld -> %ld bytes salvos em \"%s\". %.2f%% de diferença.\n", size, current_byte, output_file_name, (float) current_byte / size * 100);
+    printf("%ld bytes salvos em %s\n", current_byte, output_file_name);
 
 
     return 0;
