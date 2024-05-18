@@ -10,9 +10,6 @@
 #define BUFFER_SIZE 2e9
 #define TABLE_SIZE 256
 
-// #define GRAPH 1
-
-
 // A PESSOA QUE ESCREVEU ESSE CÓDIGO TEM A PESSIMA MANIA DE NOMEAR TUDO EM INGLÊS.
 //
 //
@@ -21,6 +18,7 @@
 // ESTEJA AVISADO.
 
 
+// 258370
 
 
 // salva quantas vezes um caractere apareceu no documento e ao mesmo tempo serve de nó para montar a árvore binaria
@@ -42,6 +40,7 @@ void graph(node*);
 void encode();
 void decode(char*);
 node* build_tree(node*[], int);
+char* append_bit(char* bit_string, char bit);
 
 int main(int argc, char* argv[]) {
 
@@ -174,7 +173,6 @@ void encode() {
             }
         }
     }
-
     compressed_bits[current_byte] <<= 8 - bits_counter;
 
     // salvar bits comprimidos
@@ -345,6 +343,7 @@ node* build_tree(node* count[], int size) {
 }
 
 
+// autoexplicativo
 void insert_sort(node* list[], int size) {
 
     for (int i = 1; i < size; i++)
@@ -373,15 +372,13 @@ void _create_lookup_table(char* table[], node* tree, char* bit_string, long int*
         *bits_amount += strlen(bit_string) * tree->count; 
     }
     else {
-        char* left = strdup(bit_string);
-        left = strcat(left, "0");
-
-        char* right = strdup(bit_string);
-        right = strcat(right, "1");
+        char* left = append_bit(bit_string, '0');
+        char* right = append_bit(bit_string, '1');
 
         _create_lookup_table(table, tree->left, left, bits_amount);
         _create_lookup_table(table, tree->right, right, bits_amount);
 
+        // estamos em um nó intermediario e não precisamos dessa bit string que aponca pra esse caminho.
         free(bit_string);
 
     }
@@ -392,6 +389,27 @@ void create_lookup_table(char* table[], node* tree, long int* bits_amount) {
     char* bit_string_initial = malloc(sizeof(char));
     bit_string_initial[0] = '\0';
     _create_lookup_table(table, tree, bit_string_initial, bits_amount);
+}
+
+// perdi um dia inteiro nisso daqui porque C é uma linguagem burra.
+// strcat NÃO realloca espaço na string pra fazer a concatenação
+//
+// char* left = strdup(bit_string);
+// left = strcat(left, "0");
+// ^ isso é errado e C não te impede de fazer isso!!!!!!!
+//
+// C foi uma pessima escolha. sinceramente acho que eu botei mais esforço nesse projeto do que eu deveria.
+char* append_bit(char* bit_string, char bit) {
+
+    int len = strlen(bit_string);
+    char* dup = strdup(bit_string);
+
+    dup = realloc(dup, len+2 * sizeof(char));
+
+    dup[len] = bit;
+    dup[len+1] = '\0';
+
+    return dup;
 }
 
 
