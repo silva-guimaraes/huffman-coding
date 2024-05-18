@@ -10,7 +10,7 @@
 #define BUFFER_SIZE 2e9
 #define TABLE_SIZE 256
 
-#define GRAPH 1
+// #define GRAPH 1
 
 
 // A PESSOA QUE ESCREVEU ESSE CÓDIGO TEM A PESSIMA MANIA DE NOMEAR TUDO EM INGLÊS.
@@ -100,6 +100,7 @@ void encode() {
                     // exemplo:
                     // 'a' == 97
                     // count['a'] == count[97]
+            .subtree = false,
             .left = NULL, 
             .right = NULL,
         };
@@ -113,15 +114,13 @@ void encode() {
     // é importante que o arquivo tenha a tabela de contagens para que decodificação
     // seja possível.
 
-    int amount = 0; // quantidade de caracteres com frequência > 0
-    // importante também saber o tamanho da tabela para poder diferenciar entre o arquivo
-    // compactado
+    int amount = 0; // numero de itens da tabela
     for (int i = 0; i < TABLE_SIZE; i++)
-        if (count[i]->count > 0)
+        if (count[i]->count > 0) // não incluir caracteres que não aparecem no texto
             amount++;
 
-    fwrite("huff", sizeof(char), 4, output_file); // magic number
-    fwrite(&amount, sizeof(int), 1, output_file); // tamanho da tabela
+    fwrite("huff", sizeof(char), 4, output_file); // magic number. isso identifica o arquivo
+    fwrite(&amount, sizeof(int), 1, output_file);
     fwrite(&size, sizeof(unsigned long), 1, output_file); // tamanho em bytes do arquivo descomprimido
     for (int i = 0; i < TABLE_SIZE; i++) {
         if (count[i]->count == 0)
@@ -176,6 +175,8 @@ void encode() {
         }
     }
 
+    compressed_bits[current_byte] <<= 8 - bits_counter;
+
     // salvar bits comprimidos
     fwrite(compressed_bits, sizeof(char), current_byte+1, output_file);
     free(compressed_bits);
@@ -226,10 +227,6 @@ void decode(char* input_filepath) {
 
     node** table = malloc(sizeof(node*) * table_size);
 
-    // printf("%s\n", magic);
-    // printf("%d\n", table_size);
-    // printf("%lu\n", decoded_size);
-
     for (int i = 0; i < table_size; i++) {
         table[i] = malloc(sizeof(node));
 
@@ -245,7 +242,6 @@ void decode(char* input_filepath) {
             .right = NULL,
         };
 
-        // printf("\"%c\" = %d\n", c, count);
     }
 
     long start = ftell(input_file);
@@ -255,13 +251,10 @@ void decode(char* input_filepath) {
     fseek(input_file, start, SEEK_SET);
 
     long size = end - start;
-    // printf("size: %ld, start %ld, end %ld\n", size, start, end);
 
     char* input = malloc(size);
     char* output = malloc(decoded_size);
     fread(input, 1, size, input_file);
-
-    // printf("foobar\n");
 
     node* root = build_tree(table, table_size);
 
@@ -282,7 +275,7 @@ void decode(char* input_filepath) {
             current_output++;
             current_node = root;
 
-            if (current_output == decoded_size)
+            if (current_output == decoded_size) 
                 break;
         }
 
@@ -403,7 +396,7 @@ void create_lookup_table(char* table[], node* tree, long int* bits_amount) {
 
 
 // graphviz é um programa que desenha grafos. ele funciona a partir de uma linguagem especifica.
-// essa função transforma toda a árvore nessa linguagem especifica. use com o script ./script.sh
+// essa função transforma toda a árvore nessa linguagem especifica. use com o script ./graph.sh
 // isso é para debug
 #ifdef GRAPH
 void _graph(node* root) {
@@ -414,6 +407,12 @@ void _graph(node* root) {
         char c = root->c;
 
         switch (c) {
+            case '\n':
+                printf("\"%p\" [label=\"\\\\n\"];\n", root);
+                break;
+            case '\t':
+                printf("\"%p\" [label=\"\\\\t\"];\n", root);
+                break;
             case '\\':
                 printf("\"%p\" [label=\"\\\\\"];\n", root);
                 break;
