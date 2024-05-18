@@ -1,4 +1,24 @@
-formatação dos arquivos gerados:
+## Compilação
+```
+./build.sh
+```
+## Teste
+```
+./test.sh
+```
+## Uso
+Para codificar:
+```
+./main < arquivo.txt
+```
+Gera um arquivo "output.huff" como resultado.
+
+Para decodificar:
+```
+./main output.huff
+```
+## Formatação
+Formatação dos arquivos gerados:
 | Tamanho (em bytes) | Uso                                                                                                                 |
 |--------------------|---------------------------------------------------------------------------------------------------------------------|
 | 4                  | magic number. diz se arquivo foi comprimido com a nossa codificação                                                 |
