@@ -5,10 +5,22 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
+#include <stdbool.h>
 
 #define BUFFER_SIZE 2e9
 #define TABLE_SIZE 256
-// #define TABLE_SIZE 128
+// #define DEBUG 1
+
+
+// A PESSOA QUE ESCREVEU ESSE CÓDIGO TEM A PESSIMA MANIA DE NOMEAR TUDO EM INGLÊS.
+//
+//
+//
+//
+// ESTEJA AVISADO.
+
+
+
 
 // salva quantas vezes um caractere apareceu no documento e ao mesmo tempo serve de nó para montar a árvore binaria
 typedef struct node {
@@ -16,117 +28,43 @@ typedef struct node {
     unsigned char c;
     // frequência absoluta do caractere. nós intermediarios terão a soma da frequência de todos os nós filhos
     int count;
+    // se nó é um nó intermediario.
+    bool subtree;
     // para os nós intermediarios apenas: 
     struct node *left, *right;
 
 } node;
 
-void insert_sort(node* list[TABLE_SIZE]) {
-    for (int i = 1; i < TABLE_SIZE; i++)
-    {
-        for (int j = i; j > 0; j--)
-        {
-            if (list[j]->count < list[j-1]->count) {
-                node* temp = list[j];
-                list[j] = list[j-1];
-                list[j-1] = temp;
-            }
-            else break;
-        }
-    }
-}
-
-// tendo montado toda a arvore, precisamos associar cada caractere com a sua codificação correspondente.
-// essa função percorre toda a arvore motando um bit string que se equivale a codificaçãodo caractere, e salva isso em
-// uma array onde o valor ascii de um caractere é usado como chave para retornar a bit string.
-// a bit string serve apenas como um representação intermediaria, iremos traduzir isso para bits de verdade logo depois.
-// (não sabia um jeito melhor de fazer isso)
-void _create_lookup_table(char* table[], node* tree, char* bit_string, long int* bits_amount) {
-
-    if (tree->c > 0) {
-        table[tree->c] = bit_string;
-        *bits_amount += strlen(bit_string) * tree->count; 
-    }
-    else {
-        char* left = strdup(bit_string);
-        left = strcat(left, "0");
-
-        char* right = strdup(bit_string);
-        right = strcat(right, "1");
-
-        _create_lookup_table(table, tree->left, left, bits_amount);
-        _create_lookup_table(table, tree->right, right, bits_amount);
-
-        free(bit_string);
-
-    }
-
-}
-void create_lookup_table(char* table[], node* tree, long int* bits_amount) {
-
-    char* bit_string_initial = malloc(sizeof(char));
-    bit_string_initial[0] = '\0';
-    _create_lookup_table(table, tree, bit_string_initial, bits_amount);
-}
-
-
-// graphviz é um programa que desenha grafos. ele funciona a partir de uma linguagem especifica.
-// essa função transforma toda a árvore nessa linguagem especifica. use com o script ./script.sh
-// isso é para debug
-void _graph(node* root) {
-
-    if (root->c == 0)
-        printf("\"%p\" [label=\"%d\"];\n", root, root->count);
-    else {
-        char c = root->c;
-
-        switch (c) {
-            case '\\':
-                printf("\"%p\" [label=\"\\\\\"];\n", root);
-                break;
-            case '"':
-                printf("\"%p\" [label=\"\\\"\"];\n", root);
-                break;
-            default:
-                printf("\"%p\" [label=\"%c\"];\n", root, c);
-                break;
-        }
-
-    }
-
-    if (root->left) {
-        printf("\"%p\" -> \"%p\";\n", root, root->left);
-        _graph(root->left);
-    }
-
-    if (root->right) {
-        printf("\"%p\" -> \"%p\";\n", root, root->right);
-        _graph(root->right);
-    }
-}
-
-// debug
-void graph(node* root) {
-    printf("digraph tree {\n");
-    _graph(root);
-    printf("}\n");
-}
+void insert_sort(node*[], int);
+void create_lookup_table(char*[], node*, long int*);
+void graph(node*);
+void encode();
+void decode(char*);
+node* build_tree(node*[], int);
 
 int main(int argc, char* argv[]) {
 
+    if (argc > 1)
+        decode(argv[1]);
+    else
+        encode();
+
+}
+
+void encode() {
     const char* output_file_name = "output.huff";
 
     // arquivo pra onde salvar toda a compressão
     FILE* output_file = fopen(output_file_name, "wb");
     if (!output_file) {
         fprintf(stderr, "ERRO: Erro ao abrir arquivo\n");
-        return 1;
+        exit(1);
     }
 
     // documento sera carregado todo em memória para esse input.
     unsigned char* input = malloc(BUFFER_SIZE);
     // tamanho em bytes do documento.
-    unsigned long int size = 0;
+    unsigned long size = 0;
 
     // lê input do stdin
     // ./main < texto.txt
@@ -166,60 +104,38 @@ int main(int argc, char* argv[]) {
         };
     }
 
-    // isso faz toda a contagem.
+    // isso faz toda a contagem do arquivo.
     for (int i = 0; i < size; i++)
         count[input[i]]->count++;
 
+    // tendo toda a contagem feita, vamos salvar essa tabela no arquivo de output.
+    // é importante que o arquivo tenha a tabela de contagens para que decodificação
+    // seja possível.
 
-    // ordem crescente pela frenquência absoluta.
-    insert_sort(count);
+    int amount = 0; // quantidade de caracteres com frequência > 0
+    // importante também saber o tamanho da tabela para poder diferenciar entre o arquivo
+    // compactado
+    for (int i = 0; i < TABLE_SIZE; i++)
+        if (count[i]->count > 0)
+            amount++;
 
-
-    // sempre sobram alguns caracteres que não estavam no documento (contagem 0) e o sort fez com que eles 
-    // ficassem no inicio da lista ordena.
-    // isso encontra o primeiro elemento com contagem > 0
-    int first = -1;
-    while (count[++first]->count == 0);
-
-    // itera a lista de contagem ordenada, começando do primeiro elemento com contagem > 0
-    // e executa o grosso do algoritmo (não vou explicar isso aqui pesquise no google)
-    for (int i = first; i < TABLE_SIZE-1 /* parar antes do ultimo elemento */; i++) {
-
-        // primeiro elemento, vai pra esquerda
-        node* left = count[i];
-
-        // segundo elemento, vai pra direita
-        node* right = count[i+1];
-
-        // criar novo nó intermediario
-        node* n = malloc(sizeof(node));
-        *n = (node) {
-            .c = 0, // caractere 0 sinaliza ele ser um nó intermediario
-            .count = left->count + right->count,
-            .left = left,
-            .right = right,
-        };
-
-        // o algoritmo pedia pra inserir o nó de volta na lista, mas eu achei mais facil por esse nó
-        // intermediario no lugar do primeiro elemento (que agora é filho desse nó intermediario,
-        // então não estamos perdendo ele) e deixar que o sort põe esse nó intermediario no lugar dele.
-
-        count[i] = n; // nó intermediario no lugar do primeiro elemento
-        insert_sort(count); // poe o nó intermediario no lugar dele.
-
-        // no meio disso tudo, acontece que nós intermediario herdam outros nós intermediarios e isso monta toda
-        // a árvore.
+    fwrite("huff", sizeof(char), 4, output_file); // magic number
+    fwrite(&amount, sizeof(int), 1, output_file); // tamanho da tabela
+    fwrite(&size, sizeof(unsigned long), 1, output_file); // tamanho em bytes do arquivo descomprimido
+    for (int i = 0; i < TABLE_SIZE; i++) {
+        if (count[i]->count == 0)
+            continue;
+        fwrite(&count[i]->c, sizeof(char), 1, output_file);
+        fwrite(&count[i]->count, sizeof(int), 1, output_file);
     }
 
-    // tendo feito isso, o ultimo elemento é o root da nossa árvore
-    node* root = count[TABLE_SIZE-1];
 
-    // debug. passe o primeiro argumeto como "graph" para imprimir o grafo pra stdout.
-    if (argc > 1 && strcmp(argv[1], "graph") == 0)
-        graph(root);
+    node* root = build_tree(count, TABLE_SIZE);
+
+    // graph(root);
 
     // tabela pra traduzir caracteres para a codificação que criamos com a árvore.
-    char* lookup[TABLE_SIZE] = { 0 };
+    char* lookup[TABLE_SIZE] = { NULL };
     // quantos bits o documento comprimido tem no total.
     long int bits_amount = 0;
     create_lookup_table(lookup, root, &bits_amount);
@@ -233,8 +149,6 @@ int main(int argc, char* argv[]) {
     unsigned long int current_byte = 0;
     // quantos bits do byte atual foram inseridos. 8 == hora de passar para o proximo byte
     int bits_counter = 0;
-
-    // eu não sabia um jeito melhor de fazer isso e nenhuma outra fonte na internet foi util. não sei pesquisar no google?
 
     // itera pelo documento inteiro caractere por caractere e traduz esse caractere para o bit string equivalente,
     // que logo em seguida é adicionado aos bits comprimidos.
@@ -258,20 +172,274 @@ int main(int argc, char* argv[]) {
         }
     }
 
-
-    // salva o arquivo final
-    fwrite(compressed_bits, sizeof(char), current_byte, output_file);
-    // TODO!!!!:
-    // salvar tabela de contagens!!!
-    // não da pra fazer a decodificação sem isso!!!
-
+    // salvar bits comprimidos
+    fwrite(compressed_bits, sizeof(char), current_byte+1, output_file);
     free(compressed_bits);
     fclose(output_file);
 
-    printf("%ld -> %ld bytes salvos em \"%s\". %.2f%% de diferença.\n", size, current_byte, output_file_name, (float) current_byte / size * 100);
+    #ifndef DEBUG
+    printf("%ld -> %ld bytes salvos em \"%s\". %.2f%% de diferença.\n",
+           size, current_byte, output_file_name, (1 - (float)current_byte / size) * 100);
+
     printf("%ld bytes salvos em %s\n", current_byte, output_file_name);
-
-
-    return 0;
+    #endif /* ifndef DEBUG */
 }
+
+/*
+ * assim fica a formatação do arquivo depois de salvo:
+ * 4 bytes para o 'magic number', um indentificador para dizer se o arquivo foi comprimido com essa codificaçá̃o.
+ * 4 bytes (int) para o tamanho da tabela de frequencia.
+ * 8 bytes (unsigned long) tamanho em bytes do arquivo descomprimido.
+ * (1 byte (char) + 4 bytes (int)) * N, onde char é o caractere, int a frequencia, e N o numero de caracteres.
+ * todo o resto do arquivo é dedicado aos bits comprimidos.
+ */
+// não sabia um jeito melhor de salvar como arquivo peço desculpas pela complexidade.
+
+void decode(char* input_filepath) {
+    FILE * input_file = fopen (input_filepath, "rb");
+    if (!input_file) {
+        fprintf(stderr, "ERRO: falha ao abrir arquivo \"%s\"!\n", input_filepath);
+        exit(1);
+    }
+
+    char* magic = malloc(sizeof(char) * 5);
+    magic[4] = '\0';
+
+    fread(magic, sizeof(char), 4, input_file);
+
+    if (strcmp(magic, "huff") != 0) {
+        fprintf(stderr, "ERRO: este arquivo não foi codificado com a codificação de huffman!\n\n");
+        fprintf(stderr, "\tPara codificar um arquivo: ./main < arquivo_a_ser_codificado.txt\n");
+        fprintf(stderr, "\tPara decodificar um arquivo: ./main arquivo_a_ser_decodificado.huff\n");
+        exit(1);
+    }
+
+    int table_size;
+    fread(&table_size, sizeof(int), 1, input_file);
+
+    unsigned long decoded_size;
+    fread(&decoded_size, sizeof(unsigned long), 1, input_file);
+
+    node** table = malloc(sizeof(node*) * table_size);
+
+    // printf("%s\n", magic);
+    // printf("%d\n", table_size);
+    // printf("%lu\n", decoded_size);
+
+    for (int i = 0; i < table_size; i++) {
+        table[i] = malloc(sizeof(node));
+
+        char c;
+        fread(&c, sizeof(char), 1, input_file);
+        int count;
+        fread(&count, sizeof(int), 1, input_file);
+
+        *table[i] = (node) {
+            .c = c,
+            .count = count,
+            .left = NULL,
+            .right = NULL,
+        };
+
+        // printf("\"%c\" = %d\n", c, count);
+    }
+
+    long start = ftell(input_file);
+    fseek(input_file, 0, SEEK_END);
+
+    long end = ftell(input_file);
+    fseek(input_file, start, SEEK_SET);
+
+    long size = end - start;
+    // printf("size: %ld, start %ld, end %ld\n", size, start, end);
+
+    char* input = malloc(size);
+    char* output = malloc(decoded_size);
+    fread(input, 1, size, input_file);
+
+    // printf("foobar\n");
+
+    node* root = build_tree(table, table_size);
+
+
+    int current_bit = 0;
+    int current_output = 0;
+    node* current_node = root;
+
+    for (int i = 0; i < size;) {
+        
+        if ((input[i] & 0x80) > 0)
+            current_node = current_node->right;
+        else 
+            current_node = current_node->left;
+
+        if (current_node->c > 0) {
+            output[current_output] = current_node->c;
+            current_output++;
+            current_node = root;
+
+            if (current_output == decoded_size)
+                break;
+        }
+
+        input[i] <<= 1;
+        current_bit++;
+
+        if (current_bit == 8) {
+            current_bit = 0;
+            i++;
+        }
+    }
+
+    fwrite(output, sizeof(char), decoded_size, stdout);
+
+    // graph(root);
+
+    fclose(input_file);
+
+}
+
+node* build_tree(node* count[], int size) {
+    // ordem crescente pela frenquência absoluta.
+    insert_sort(count, size);
+
+    // sempre sobram alguns caracteres que não estavam no documento (contagem 0) e o sort fez com que eles 
+    // ficassem no inicio da lista ordena.
+    // isso encontra o primeiro elemento com contagem > 0
+    int first = -1;
+    while (count[++first]->count == 0);
+
+
+    // itera a lista de contagem ordenada, começando do primeiro elemento com contagem > 0
+    // e executa o grosso do algoritmo (não vou explicar isso aqui pesquise no google)
+    for (int i = first; i < size-1 /* parar antes do ultimo elemento */; i++) {
+
+        // primeiro elemento, vai pra esquerda
+        node* left = count[i];
+
+        // segundo elemento, vai pra direita
+        node* right = count[i+1];
+
+        // criar novo nó intermediario
+        node* n = malloc(sizeof(node));
+        *n = (node) {
+            // .c = 0, // caractere 0 sinaliza ele ser um nó intermediario
+            .subtree = true,
+            .count = left->count + right->count,
+            .left = left,
+            .right = right,
+        };
+
+        // o algoritmo pedia pra inserir o nó de volta na lista, mas eu achei mais facil por esse nó
+        // intermediario no lugar do primeiro elemento (que agora é filho desse nó intermediario,
+        // então não estamos perdendo ele) e deixar que o sort põe esse nó intermediario no lugar correto.
+
+        count[i] = n;
+        insert_sort(count, size);
+
+        // no meio disso tudo, nós intermediario herdam outros nós intermediarios e isso monta toda
+        // a árvore.
+    }
+
+    // tendo feito isso, o ultimo elemento é o root da nossa árvore
+    node* root = count[size-1];
+
+    return root;
+}
+
+
+void insert_sort(node* list[], int size) {
+
+    for (int i = 1; i < size; i++)
+    {
+        for (int j = i; j > 0; j--)
+        {
+            if (list[j]->count < list[j-1]->count) {
+                node* temp = list[j];
+                list[j] = list[j-1];
+                list[j-1] = temp;
+            }
+            else break;
+        }
+    }
+}
+
+// tendo montado toda a arvore, precisamos associar cada caractere com a sua codificação correspondente.
+// essa função percorre toda a arvore motando um bit string que se equivale a codificaçãodo caractere, e salva isso em
+// uma array onde o valor ascii de um caractere é usado como chave para retornar a bit string.
+// a bit string serve apenas como um representação intermediaria, iremos traduzir isso para bits de verdade logo depois.
+// (não sabia um jeito melhor de fazer isso)
+void _create_lookup_table(char* table[], node* tree, char* bit_string, long int* bits_amount) {
+
+    if (!tree->subtree) {
+        table[tree->c] = bit_string;
+        *bits_amount += strlen(bit_string) * tree->count; 
+    }
+    else {
+        char* left = strdup(bit_string);
+        left = strcat(left, "0");
+
+        char* right = strdup(bit_string);
+        right = strcat(right, "1");
+
+        _create_lookup_table(table, tree->left, left, bits_amount);
+        _create_lookup_table(table, tree->right, right, bits_amount);
+
+        free(bit_string);
+
+    }
+
+}
+void create_lookup_table(char* table[], node* tree, long int* bits_amount) {
+
+    char* bit_string_initial = malloc(sizeof(char));
+    bit_string_initial[0] = '\0';
+    _create_lookup_table(table, tree, bit_string_initial, bits_amount);
+}
+
+
+// graphviz é um programa que desenha grafos. ele funciona a partir de uma linguagem especifica.
+// essa função transforma toda a árvore nessa linguagem especifica. use com o script ./script.sh
+// isso é para debug
+#ifdef DEBUG
+void _graph(node* root) {
+
+    if (root->subtree)
+        printf("\"%p\" [label=\"%d\"];\n", root, root->count);
+    else {
+        char c = root->c;
+
+        switch (c) {
+            case '\\':
+                printf("\"%p\" [label=\"\\\\\"];\n", root);
+                break;
+            case '"':
+                printf("\"%p\" [label=\"\\\"\"];\n", root);
+                break;
+            default:
+                printf("\"%p\" [label=\"%c\"];\n", root, c);
+                break;
+        }
+
+    }
+
+    if (root->left) {
+        printf("\"%p\" -> \"%p\";\n", root, root->left);
+        _graph(root->left);
+    }
+
+    if (root->right) {
+        printf("\"%p\" -> \"%p\";\n", root, root->right);
+        _graph(root->right);
+    }
+}
+
+void graph(node* root) {
+    printf("digraph tree {\n");
+    _graph(root);
+    printf("}\n");
+}
+
+#endif /* ifdef DEBUG */
+
 
