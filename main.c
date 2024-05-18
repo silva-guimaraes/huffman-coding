@@ -9,7 +9,8 @@
 
 #define BUFFER_SIZE 2e9
 #define TABLE_SIZE 256
-// #define DEBUG 1
+
+#define GRAPH 1
 
 
 // A PESSOA QUE ESCREVEU ESSE CÓDIGO TEM A PESSIMA MANIA DE NOMEAR TUDO EM INGLÊS.
@@ -132,7 +133,10 @@ void encode() {
 
     node* root = build_tree(count, TABLE_SIZE);
 
-    // graph(root);
+    #ifdef GRAPH
+    graph(root);
+    return;
+    #endif /* ifdef GRAPH */
 
     // tabela pra traduzir caracteres para a codificação que criamos com a árvore.
     char* lookup[TABLE_SIZE] = { NULL };
@@ -177,12 +181,12 @@ void encode() {
     free(compressed_bits);
     fclose(output_file);
 
-    #ifndef DEBUG
+    #ifndef GRAPH
     printf("%ld -> %ld bytes salvos em \"%s\". %.2f%% de diferença.\n",
            size, current_byte, output_file_name, (1 - (float)current_byte / size) * 100);
 
     printf("%ld bytes salvos em %s\n", current_byte, output_file_name);
-    #endif /* ifndef DEBUG */
+    #endif /* ifndef GRAPH */
 }
 
 /*
@@ -401,7 +405,7 @@ void create_lookup_table(char* table[], node* tree, long int* bits_amount) {
 // graphviz é um programa que desenha grafos. ele funciona a partir de uma linguagem especifica.
 // essa função transforma toda a árvore nessa linguagem especifica. use com o script ./script.sh
 // isso é para debug
-#ifdef DEBUG
+#ifdef GRAPH
 void _graph(node* root) {
 
     if (root->subtree)
@@ -440,6 +444,6 @@ void graph(node* root) {
     printf("}\n");
 }
 
-#endif /* ifdef DEBUG */
+#endif /* ifdef GRAPH */
 
 
