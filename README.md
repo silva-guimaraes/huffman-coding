@@ -6,6 +6,16 @@
 ```
 ./test.sh
 ```
+## Visualização
+Requer uma ferramenta de visualização chamada [graphviz](https://graphviz.org/) como dependência e que seja definido o seguinte macro diretamente no código:
+```c
+#define GRAPH 1
+```
+Após isso, gere a árvore da codificação com:
+```
+./graph.sh arquivo.txt
+```
+Gera uma imagem "output.png" do seu diretório atual.
 ## Uso
 Para codificar:
 ```
