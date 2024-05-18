@@ -19,7 +19,7 @@ printf '\n'
 echo 'a.txt: "a.txt.txt"'
 ./main < ./input/a.txt
 ./main ./output.huff > foobar
-diff ./input/rance10_script.txt foobar
+diff ./input/a.txt foobar
 
 printf '\n'
 echo 'rance X: "rance10_script.txt"'
