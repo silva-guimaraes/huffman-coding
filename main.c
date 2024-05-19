@@ -189,8 +189,8 @@ void encode() {
     unsigned long total_size = header_size + (current_byte+1) * sizeof(char);
 
     #ifndef GRAPH
-    printf("%ld -> %ld bytes salvos em \"%s\". %.2f%% de diferença.\n",
-           size, total_size, output_file_name, (1 - (float)total_size / size) * 100);
+    printf("%ld -> %ld bytes salvos em \"%s\". %.2f%% de taxa, %.2f%% de razão\n",
+           size, total_size, output_file_name, (float)size / total_size * 100, (1 - (float) total_size / size) * 100);
     #endif /* ifndef GRAPH */
 }
 
