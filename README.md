@@ -40,6 +40,7 @@ Formatação dos arquivos gerados:
 | variado            | bits comprimidos                                                                                                    |
 
 ## Benchmarks
+### Arquivos:
 Testes feitos com os arquivos presentes na pasta `input`:
 <dl>
   <dt>
@@ -58,27 +59,31 @@ Testes feitos com os arquivos presentes na pasta `input`:
     a.txt
   </dt>
   <dd>
-    Um arquivo de texto com apenas um caractere, um "a".
+    Um arquivo de texto com apenas dois caracteres, um "a" e um newline.
   </dd>
   <dt>
     rance10_script.txt
   </dt>
   <dd>
-    Script da visual novel com o maior conteúdo de acordo com o reddit, <a href="https://vndb.org/v20802">Rance Ⅹ -決戦-</a>, totalizando 168 horas de jogo no total.
+    Script da visual novel com o maior conteúdo de acordo com o reddit, <a href="https://vndb.org/v20802">Rance Ⅹ -決戦-</a>, totalizando 168 horas de jogo no total, em Japonês.
   </dd>
 </dl>
+
+### Specs:
 
 **Todos os testes a seguir foram executados em uma maquina com as seguintes especificações:**
 - CPU: 12th Gen Intel i5-1235U (12 núcleos) @ 4.400GHz clock
 - GPU (Integrada): Intel Alder Lake-UP3 GT2 (Iris Xe Graphics)
 - Memória: 15,3G disponíveis.
 
-A razão de compressão Indica a porcentagem de redução no tamanho do arquivo original após a compressão e é uma medida relativa. A taxa de compressão denota quantas vezes menor é o tamanho do arquivo comprimido em relação ao tamanho do arquivo original e é medida absoluta. Segue a formula usada para calcular as duas métricas:
+### Formulas:
+A razão de compressão indica a porcentagem de redução no tamanho do arquivo original após a compressão e é uma medida relativa. A taxa de compressão denota quantas vezes menor é o tamanho do arquivo comprimido em relação ao tamanho do arquivo original e é uma medida absoluta. Segue as formulas usada para calcular as duas métricas:
 
 $\text{Taxa de compressão} = \frac{\text{Tamanho original}}{\text{Tamanho comprimido}}$
 
 $\text{Razão de compressão} = 1 - \frac{\text{Tamanho comprimido}}{\text{Tamanho original}}$
 
+### Resultados:
 
 | arquivo            | tamanho original      | tamanho compresso    | Taxa de compressão | razão de compressão | tempo compressão | tempo descompressão | codificação |
 |--------------------|-----------------------|----------------------|--------------------|---------------------|------------------|---------------------|-------------|
@@ -88,3 +93,20 @@ $\text{Razão de compressão} = 1 - \frac{\text{Tamanho comprimido}}{\text{Taman
 | rance10_script.txt | 12163505 bytes (12M)  | 7142366 bytes (6,9M) | 170,30%            | 41,28%              | 0,295 segundos   | 0,329 segundos      | UTF-8*      |
 
 *O programa não é capaz de interpretar UTF-8. bytes individuais e arbitrários foram tratados como caracteres.
+### Árvores resultantes:
+- biblia.txt
+
+![biblia.txt](imagens/biblia.png)
+
+- ffmpeg_doc.txt
+
+![ffmpeg_doc.txt](imagens/ffmpeg_doc.png)
+
+- a.txt
+
+![a.txt](imagens/a.png)
+
+- rance10_script.txt
+
+![rance10_script.txt](imagens/rance10_script.png)
+Curiosamente, todos os caracteres ascii ficam quase que completamente isolados de todo o resto neste caso.
