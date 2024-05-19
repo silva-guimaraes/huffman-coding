@@ -85,12 +85,12 @@ $\text{Razão de compressão} = 1 - \frac{\text{Tamanho comprimido}}{\text{Taman
 
 ### Resultados:
 
-| arquivo            | tamanho original      | tamanho compresso    | Taxa de compressão | razão de compressão | tempo compressão | tempo descompressão | codificação |
-|--------------------|-----------------------|----------------------|--------------------|---------------------|------------------|---------------------|-------------|
-| biblia.txt         | 4602959 bytes (4,4 M) | 2676259 bytes (2,6M) | 171,99%            | 41,86%              | 0,181 segundos   | 0,142 segundos      | ASCII       |
-| ffmpeg_doc.txt     | 122355 bytes (120K)   | 66869 bytes (66K)    | 182,98%            | 45,35%              | 0,004 segundos   | 0,007 segundos      | ASCII       |
-| a.txt              | 2 bytes               | 27 bytes             | 7,41%              | -1250%              | 0,002 segundos   | 0,002 segundos      | ASCII       |
-| rance10_script.txt | 12163505 bytes (12M)  | 7142366 bytes (6,9M) | 170,30%            | 41,28%              | 0,295 segundos   | 0,329 segundos      | UTF-8*      |
+| Arquivo            | Linhas  | Tamanho original        | Tamanho compresso      | Taxa de compressão | Razão de compressão | Tempo compressão | Tempo descompressão | Codificação |
+|--------------------|---------|-------------------------|------------------------|--------------------|---------------------|------------------|---------------------|-------------|
+| biblia.txt         | 31.104  | 4.602.959 bytes (4,4 M) | 2.676.259 bytes (2,6M) | 171,99%            | 41,86%              | 0,181 segundos   | 0,142 segundos      | ASCII       |
+| ffmpeg_doc.txt     | 2.328   | 122.355 bytes (120K)    | 66.869 bytes (66K)     | 182,98%            | 45,35%              | 0,004 segundos   | 0,007 segundos      | ASCII       |
+| a.txt              | 1       | 2 bytes                 | 27 bytes               | 7,41%              | -1250%              | 0,002 segundos   | 0,002 segundos      | ASCII       |
+| rance10_script.txt | 264.709 | 12.163.505 bytes (12M)  | 7.142.366 bytes (6,9M) | 170,30%            | 41,28%              | 0,295 segundos   | 0,329 segundos      | UTF-8*      |
 
 *O programa não é capaz de interpretar UTF-8. bytes individuais e arbitrários foram tratados como caracteres.
 ### Árvores resultantes:
