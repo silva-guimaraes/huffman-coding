@@ -101,6 +101,10 @@ $\text{Razão de compressão} = 1 - \frac{\text{Tamanho comprimido}}{\text{Taman
 
 *O programa não é capaz de interpretar UTF-8. bytes individuais e arbitrários foram tratados como caracteres.
 ### Árvores resultantes:
+- huffman_wiki.txt
+
+![huffman_wiki.txt](imagens/huffman_wiki.png)
+
 - biblia.txt
 
 ![biblia.txt](imagens/biblia.png)
@@ -117,7 +121,3 @@ $\text{Razão de compressão} = 1 - \frac{\text{Tamanho comprimido}}{\text{Taman
 
 ![rance10_script.txt](imagens/rance10_script.png)
 Curiosamente, todos os caracteres ascii ficam quase que completamente isolados de todo o resto neste caso.
-
-- huffman_wiki.txt
-
-![huffman_wiki.txt](imagens/huffman_wiki.png)
