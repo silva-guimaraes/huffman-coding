@@ -2,27 +2,27 @@
 
 set -e
 
+
 ./build.sh
 
-echo 'biblia versão king james: "biblia"'
-./main < ./input/biblia.txt
-./main ./output.huff > foobar
-diff ./input/biblia.txt foobar
+test () {
+    echo '=================='
+    echo $1
+    time ./main < $2
+    printf '\ndecodificação:\n'
+    time ./main ./output.huff > foobar
+    echo
+    du -h --apparent-size $2
+    du -h --apparent-size ./output.huff
+    du -h --apparent-size foobar
+    diff $2 foobar
+    echo
+}
 
-printf '\n'
-echo 'documentação do ffmpeg: "teste.txt"'
-./main < ./input/teste.txt
-./main ./output.huff > foobar
-diff ./input/teste.txt foobar
+test 'biblia versão king james: "biblia"' ./input/biblia.txt
 
-printf '\n'
-echo 'a.txt: "a.txt.txt"'
-./main < ./input/a.txt
-./main ./output.huff > foobar
-diff ./input/a.txt foobar
+test 'documentação do ffmpeg: "ffmpeg_doc.txt"' ./input/ffmpeg_doc.txt
 
-printf '\n'
-echo 'rance X: "rance10_script.txt"'
-./main < ./input/rance10_script.txt
-./main ./output.huff > foobar
-diff ./input/rance10_script.txt foobar
+test 'a.txt: "a.txt"' ./input/a.txt
+
+test 'rance X: "rance10_script.txt"' ./input/rance10_script.txt

@@ -112,6 +112,8 @@ void encode() {
     // tendo toda a contagem feita, vamos salvar essa tabela no arquivo de output.
     // é importante que o arquivo tenha a tabela de contagens para que decodificação
     // seja possível.
+    
+    int header_size = 0; // tamanho em espaço que o header toma conta no arquivo comprimido.
 
     int amount = 0; // numero de itens da tabela
     for (int i = 0; i < TABLE_SIZE; i++)
@@ -121,25 +123,29 @@ void encode() {
     fwrite("huff", sizeof(char), 4, output_file); // magic number. isso identifica o arquivo
     fwrite(&amount, sizeof(int), 1, output_file);
     fwrite(&size, sizeof(unsigned long), 1, output_file); // tamanho em bytes do arquivo descomprimido
+
+    header_size += sizeof(char) * 4 + sizeof(int) + sizeof(unsigned long);
+
     for (int i = 0; i < TABLE_SIZE; i++) {
         if (count[i]->count == 0)
             continue;
         fwrite(&count[i]->c, sizeof(char), 1, output_file);
         fwrite(&count[i]->count, sizeof(int), 1, output_file);
+        header_size += sizeof(char) + sizeof(int);
     }
 
 
+    // monta a nossa arvore.
     node* root = build_tree(count, TABLE_SIZE);
+
 
     #ifdef GRAPH
     graph(root);
     return;
     #endif /* ifdef GRAPH */
 
-    // tabela pra traduzir caracteres para a codificação que criamos com a árvore.
-    char* lookup[TABLE_SIZE] = { NULL };
-    // quantos bits o documento comprimido tem no total.
-    long int bits_amount = 0;
+    char* lookup[TABLE_SIZE] = { NULL }; // tabela pra traduzir caracteres para a codificação que criamos com a árvore.
+    long int bits_amount = 0; // quantos bits o documento comprimido tem no total.
     create_lookup_table(lookup, root, &bits_amount);
 
     // array de bytes para o output final comprimido. cada byte dessa array será preenchido com os bits.
@@ -180,11 +186,11 @@ void encode() {
     free(compressed_bits);
     fclose(output_file);
 
+    unsigned long total_size = header_size + (current_byte+1) * sizeof(char);
+
     #ifndef GRAPH
     printf("%ld -> %ld bytes salvos em \"%s\". %.2f%% de diferença.\n",
-           size, current_byte, output_file_name, (1 - (float)current_byte / size) * 100);
-
-    printf("%ld bytes salvos em %s\n", current_byte, output_file_name);
+           size, total_size, output_file_name, (1 - (float)total_size / size) * 100);
     #endif /* ifndef GRAPH */
 }
 
@@ -396,7 +402,7 @@ void create_lookup_table(char* table[], node* tree, long int* bits_amount) {
 //
 // char* left = strdup(bit_string);
 // left = strcat(left, "0");
-// ^ isso é errado e C não te impede de fazer isso!!!!!!!
+// ^ isso é errado e essa lingua não te impede de fazer isso!!!!!!!
 //
 // C foi uma pessima escolha. sinceramente acho que eu botei mais esforço nesse projeto do que eu deveria.
 char* append_bit(char* bit_string, char bit) {
