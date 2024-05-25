@@ -83,21 +83,20 @@ Testes feitos com os arquivos presentes na pasta `input`:
 - Memória: 15,3G disponíveis.
 
 ### Formulas:
-A razão de compressão indica a porcentagem de redução no tamanho do arquivo original após a compressão e é uma medida relativa. A taxa de compressão denota quantas vezes menor é o tamanho do arquivo comprimido em relação ao tamanho do arquivo original e é uma medida absoluta. Segue as formulas usada para calcular as duas métricas:
+<!-- A taxa de compressão denota quantas vezes menor é o tamanho do arquivo comprimido em relação ao tamanho do arquivo original e é uma medida absoluta. Segue as formulas usada para calcular as duas métricas: -->
+$\text{Taxa de compressão} = \frac{\text{Tamanho comprimido}}{\text{Tamanho original}}$
 
-$\text{Taxa de compressão} = \frac{\text{Tamanho original}}{\text{Tamanho comprimido}}$
-
-$\text{Razão de compressão} = 1 - \frac{\text{Tamanho comprimido}}{\text{Tamanho original}}$
+$\text{Espaço Salvo} = 1 - \frac{\text{Tamanho comprimido}}{\text{Tamanho original}}$
 
 ### Resultados:
 
-| Arquivo            | Linhas  | Tamanho original        | Tamanho compresso      | Taxa de compressão | Razão de compressão | Tempo compressão | Tempo descompressão | Codificação |
+| Arquivo            | Linhas  | Tamanho original        | Tamanho compresso      | Taxa de compressão | Espaço Salvo        | Tempo compressão | Tempo descompressão | Codificação |
 |--------------------|---------|-------------------------|------------------------|--------------------|---------------------|------------------|---------------------|-------------|
-| huffman_wiki.txt   | 300     | 35.335 bytes (35K)      | 22.528 (22K)           | 156,85%            | 36,24%              | 0,004 segundos   | 0,004 segundos      | ASCII       |
-| ffmpeg_doc.txt     | 2.328   | 122.355 bytes (120K)    | 66.869 bytes (66K)     | 182,98%            | 45,35%              | 0,004 segundos   | 0,007 segundos      | ASCII       |
-| biblia.txt         | 31.104  | 4.602.959 bytes (4,4 M) | 2.676.259 bytes (2,6M) | 171,99%            | 41,86%              | 0,181 segundos   | 0,142 segundos      | ASCII       |
-| a.txt              | 1       | 2 bytes                 | 27 bytes               | 7,41%              | -1250%              | 0,002 segundos   | 0,002 segundos      | ASCII       |
-| rance10_script.txt | 264.709 | 12.163.505 bytes (12M)  | 7.142.366 bytes (6,9M) | 170,30%            | 41,28%              | 0,295 segundos   | 0,329 segundos      | UTF-8*      |
+| huffman_wiki.txt   | 300     | 35.335 bytes (35K)      | 22.528 (22K)           | 63,76%             | 36,24%              | 0,004 segundos   | 0,004 segundos      | UTF-8*      |
+| ffmpeg_doc.txt     | 2.328   | 122.355 bytes (120K)    | 66.869 bytes (66K)     | 54.65%             | 45.35%              | 0,004 segundos   | 0,007 segundos      | ASCII       |
+| biblia.txt         | 31.104  | 4.602.959 bytes (4,4 M) | 2.676.259 bytes (2,6M) | 58.14%             | 41,86%              | 0,181 segundos   | 0,142 segundos      | ASCII       |
+| a.txt              | 1       | 2 bytes                 | 27 bytes               | 1350.00%           | -1250%              | 0,002 segundos   | 0,002 segundos      | ASCII       |
+| rance10_script.txt | 264.709 | 12.163.505 bytes (12M)  | 7.142.366 bytes (6,9M) | 58.72%             | 41,28%              | 0,295 segundos   | 0,329 segundos      | UTF-8*      |
 
 *O programa não é capaz de interpretar UTF-8. bytes individuais e arbitrários foram tratados como caracteres.
 ### Árvores resultantes:

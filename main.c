@@ -21,7 +21,8 @@
 // 258370
 
 
-// salva quantas vezes um caractere apareceu no documento e ao mesmo tempo serve de nó para montar a árvore binaria
+// salva quantas vezes um caractere apareceu no documento e ao mesmo tempo serve
+// de nó para montar a árvore binaria
 typedef struct node {
     // caractere
     unsigned char c;
@@ -144,7 +145,8 @@ void encode() {
     return;
     #endif /* ifdef GRAPH */
 
-    char* lookup[TABLE_SIZE] = { NULL }; // tabela pra traduzir caracteres para a codificação que criamos com a árvore.
+    // tabela pra traduzir caracteres para a codificação que criamos com a árvore.
+    char* lookup[TABLE_SIZE] = { NULL };
     long int bits_amount = 0; // quantos bits o documento comprimido tem no total.
     create_lookup_table(lookup, root, &bits_amount);
 
@@ -189,8 +191,10 @@ void encode() {
     unsigned long total_size = header_size + (current_byte+1) * sizeof(char);
 
     #ifndef GRAPH
-    printf("%ld -> %ld bytes salvos em \"%s\". %.2f%% de taxa, %.2f%% de razão\n",
-           size, total_size, output_file_name, (float)size / total_size * 100, (1 - (float) total_size / size) * 100);
+    printf("%ld -> %ld bytes salvos em \"%s\". %.2f%% de taxa, %.2f%% salvos\n",
+           size, total_size, output_file_name,
+           (float)total_size / size * 100,
+           (1 - (float) total_size / size) * 100);
     #endif /* ifndef GRAPH */
 }
 
@@ -367,9 +371,11 @@ void insert_sort(node* list[], int size) {
 }
 
 // tendo montado toda a arvore, precisamos associar cada caractere com a sua codificação correspondente.
-// essa função percorre toda a arvore motando um bit string que se equivale a codificaçãodo caractere, e salva isso em
-// uma array onde o valor ascii de um caractere é usado como chave para retornar a bit string.
-// a bit string serve apenas como um representação intermediaria, iremos traduzir isso para bits de verdade logo depois.
+// essa função percorre toda a arvore motando um bit string que se equivale a codificaçãodo caractere,
+// e salva isso em uma array onde o valor ascii de um caractere é usado como chave para retornar a bit string.
+// a bit string serve apenas como um representação intermediaria, iremos traduzir isso para bits
+// de verdade logo depois.
+
 // (não sabia um jeito melhor de fazer isso)
 void _create_lookup_table(char* table[], node* tree, char* bit_string, long int* bits_amount) {
 
